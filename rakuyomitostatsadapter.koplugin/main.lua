@@ -1,5 +1,6 @@
 local DataStorage = require("datastorage")
 local Device = require("device")
+local DocumentRegistry = require("document/documentregistry")
 local logger = require("logger")
 local SQ3 = require("lua-ljsqlite3/init")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
@@ -24,14 +25,22 @@ function RakuyomiToStatsAdapter:getMangaNameFromMangaId(manga_id)
     return string.gsub(manga_id, "%/series/[0-9A-Z]+/", "")
 end
 
-function RakuyomiToStatsAdapter:linkFileToManga(manga_path, manga_id)
+function RakuyomiToStatsAdapter:getPagesInManga(manga_path)
+    local doc = DocumentRegistry:openDocument(manga_path)
+    local page_count = doc:getPageCount()
+    doc:close()
+    return page_count
+end
+
+function RakuyomiToStatsAdapter:linkFileToManga(manga_path, manga_id, chapter_num)
     local manga_name = RakuyomiToStatsAdapter:getMangaNameFromMangaId(manga_id)
+    local manga_pages = RakuyomiToStatsAdapter:getPagesInManga(manga_path)
     logger.dbg("@@@@@@@@@@@@@@@@@@")
-    logger.dbg("Linking file (" .. manga_path .. ") to manga (" .. manga_name .. ")")
+    logger.dbg(string.format("Linking file (%s) to manga (%s) vol (%s) w (%s) pages", manga_path, manga_name, chapter_num, manga_pages))
     logger.dbg("@@@@@@@@@@@@@@@@@@")
     local conn = SQ3.open(db_location)
-    local stmt = conn:prepare("INSERT INTO file_to_manga_map VALUES(?, ?) ON CONFLICT(file_path) DO NOTHING;")
-    stmt:reset():bind(manga_path, manga_name):step()
+    local stmt = conn:prepare("INSERT INTO file_to_manga_map VALUES(?, ?, ?, ?) ON CONFLICT(file_path) DO NOTHING;")
+    stmt:reset():bind(manga_path, manga_name, chapter_num, manga_pages):step()
     stmt:close()
     conn:close()
 end
@@ -63,7 +72,9 @@ function RakuyomiToStatsAdapter:createDB(conn)
         CREATE TABLE IF NOT EXISTS file_to_manga_map
             (
                 file_path TEXT PRIMARY KEY,
-                manga_name TEXT
+                manga_name TEXT NOT NULL,
+                chapter_num INTEGER NOT NULL,
+                chapter_pages INTEGER NOT NULL
             );
     ]]
     conn:exec(sql_stmt)

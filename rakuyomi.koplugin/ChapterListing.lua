@@ -13,7 +13,7 @@ function ChapterListing:fetchAndShow(manga, onReturnCallback, accept_cached_resu
 end
 function ChapterListing:openChapterOnReader(chapter, download_job)
     -- ..
-    self.on_selected_chapter_callback(manga_path, chapter.manga_id)
+    self.on_selected_chapter_callback(manga_path, chapter.manga_id, chapter.chapter_num)
     MangaReader:show({
       path = manga_path,
       on_end_of_book_callback = onEndOfBookCallback,

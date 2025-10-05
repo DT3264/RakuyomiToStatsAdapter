@@ -22,10 +22,6 @@ end
 function RakuyomiToStatsAdapter:addToMainMenu(_)
 end
 
-function RakuyomiToStatsAdapter:getMangaNameFromMangaId(manga_id)
-    return string.gsub(manga_id, "%/series/[0-9A-Z]+/", "")
-end
-
 function RakuyomiToStatsAdapter:getPagesInManga(manga_path)
     local doc = DocumentRegistry:openDocument(manga_path)
     local page_count = doc:getPageCount()
@@ -33,8 +29,7 @@ function RakuyomiToStatsAdapter:getPagesInManga(manga_path)
     return page_count
 end
 
-function RakuyomiToStatsAdapter:linkFileToManga(manga_path, manga_id, chapter_num)
-    local manga_name = RakuyomiToStatsAdapter:getMangaNameFromMangaId(manga_id)
+function RakuyomiToStatsAdapter:linkFileToManga(manga_path, manga_name, chapter_num)
     local manga_pages = RakuyomiToStatsAdapter:getPagesInManga(manga_path)
     logger.dbg("@@@@@@@@@@@@@@@@@@")
     logger.dbg(string.format("Linking file (%s) to manga (%s) vol (%s) w (%s) pages", manga_path, manga_name, chapter_num, manga_pages))

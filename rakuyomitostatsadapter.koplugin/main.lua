@@ -6,6 +6,7 @@ local SQ3 = require("lua-ljsqlite3/init")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
 
 local db_location = DataStorage:getSettingsDir() .. "/rakuyomi_file_map.sqlite3"
+local DB_SCHEMA_VERSION = 20251005
 
 logger.info("Loading RakuyomiToStatsAdapter")
 
@@ -79,17 +80,23 @@ function RakuyomiToStatsAdapter:createDB(conn)
     else
         conn:exec("PRAGMA journal_mode=TRUNCATE;")
     end
-    local sql_stmt = [[
+    local initial_stmt = [[
         -- file_to_manga_map
         CREATE TABLE IF NOT EXISTS file_to_manga_map
-            (
-                file_path TEXT PRIMARY KEY,
-                manga_name TEXT NOT NULL,
-                chapter_num INTEGER NOT NULL,
-                chapter_pages INTEGER NOT NULL
-            );
+        (
+            file_path TEXT PRIMARY KEY,
+            manga_name TEXT NOT NULL,
+            chapter_num INTEGER NOT NULL,
+            chapter_pages INTEGER NOT NULL
+        );
+        -- Indexes for getPageOffset
+        CREATE INDEX IF NOT EXISTS idx_manga_chapter ON file_to_manga_map(manga_name, chapter_num);
+        CREATE INDEX IF NOT EXISTS idx_chapter_num ON file_to_manga_map(chapter_num);
     ]]
-    conn:exec(sql_stmt)
+    conn:exec(initial_stmt)
+
+    -- DB schema version
+    conn:exec(string.format("PRAGMA user_version=%d;", DB_SCHEMA_VERSION))
 end
 
 return RakuyomiToStatsAdapter

@@ -60,10 +60,9 @@ end
 
 function RakuyomiToStatsAdapter:getMangaForFilePathIfExists(file_path)
     local conn = SQ3.open(db_location)
-    local manga_name = conn:rowexec("SELECT manga_name FROM file_to_manga_map WHERE file_path = '" .. file_path.. "'")
-
+    local stmt_manga_name = conn:prepare("SELECT manga_name FROM file_to_manga_map WHERE file_path = ?")
+    local manga_name = stmt_manga_name:reset():bind(file_path):step()[1]
     conn:close()
-
     return manga_name
 end
 

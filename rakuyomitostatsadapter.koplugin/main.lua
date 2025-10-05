@@ -1,0 +1,72 @@
+local DataStorage = require("datastorage")
+local Device = require("device")
+local logger = require("logger")
+local SQ3 = require("lua-ljsqlite3/init")
+local WidgetContainer = require("ui/widget/container/widgetcontainer")
+
+local db_location = DataStorage:getSettingsDir() .. "/mangaadapter.sqlite3"
+
+logger.info("Loading RakuyomiToStatsAdapter")
+
+local RakuyomiToStatsAdapter = WidgetContainer:extend{
+    name = "rakuyomi_to_stats",
+}
+
+function RakuyomiToStatsAdapter:init()
+    self.ui.menu:registerToMainMenu(self)
+    self:checkInitDatabase()
+end
+
+function RakuyomiToStatsAdapter:addToMainMenu(_)
+end
+
+function RakuyomiToStatsAdapter:getMangaNameFromMangaId(manga_id)
+    return string.gsub(manga_id, "%/series/[0-9A-Z]+/", "")
+end
+
+function RakuyomiToStatsAdapter:linkFileToManga(manga_path, manga_id)
+    local manga_name = RakuyomiToStatsAdapter:getMangaNameFromMangaId(manga_id)
+    logger.dbg("@@@@@@@@@@@@@@@@@@")
+    logger.dbg("Linking file (" .. manga_path .. ") to manga (" .. manga_name .. ")")
+    logger.dbg("@@@@@@@@@@@@@@@@@@")
+    local conn = SQ3.open(db_location)
+    local stmt = conn:prepare("INSERT INTO file_to_manga_map VALUES(?, ?) ON CONFLICT(file_path) DO NOTHING;")
+    stmt:reset():bind(manga_path, manga_name):step()
+    stmt:close()
+    conn:close()
+end
+
+function RakuyomiToStatsAdapter:getMangaForFilePathIfExists(file_path)
+    local conn = SQ3.open(db_location)
+    local manga_name = conn:rowexec("SELECT manga_name FROM file_to_manga_map WHERE file_path = '" .. file_path.. "'")
+
+    conn:close()
+
+    return manga_name
+end
+
+function RakuyomiToStatsAdapter:checkInitDatabase()
+    local conn = SQ3.open(db_location)
+    self:createDB(conn)
+    conn:close()
+end
+
+function RakuyomiToStatsAdapter:createDB(conn)
+    -- Make it WAL, if possible
+    if Device:canUseWAL() then
+        conn:exec("PRAGMA journal_mode=WAL;")
+    else
+        conn:exec("PRAGMA journal_mode=TRUNCATE;")
+    end
+    local sql_stmt = [[
+        -- file_to_manga_map
+        CREATE TABLE IF NOT EXISTS file_to_manga_map
+            (
+                file_path TEXT PRIMARY KEY,
+                manga_name TEXT
+            );
+    ]]
+    conn:exec(sql_stmt)
+end
+
+return RakuyomiToStatsAdapter

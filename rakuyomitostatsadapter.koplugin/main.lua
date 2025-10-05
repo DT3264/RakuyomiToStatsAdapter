@@ -32,7 +32,7 @@ end
 function RakuyomiToStatsAdapter:linkFileToManga(manga_path, manga_name, chapter_num)
     local manga_pages = RakuyomiToStatsAdapter:getPagesInManga(manga_path)
     logger.dbg("@@@@@@@@@@@@@@@@@@")
-    logger.dbg(string.format("Linking file (%s) to manga (%s) vol (%s) w (%s) pages", manga_path, manga_name, chapter_num, manga_pages))
+    logger.dbg(string.format("Linking file (%s) to manga (%s) chapter (%s) w (%s) pages", manga_path, manga_name, chapter_num, manga_pages))
     logger.dbg("@@@@@@@@@@@@@@@@@@")
     local conn = SQ3.open(db_location)
     local stmt = conn:prepare("INSERT INTO file_to_manga_map VALUES(?, ?, ?, ?) ON CONFLICT(file_path) DO NOTHING;")

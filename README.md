@@ -1,3 +1,8 @@
 # RakuyomiToMangaAdapter
 
-I acknowledge that this is not the cleanest approach, but it allows me to track the time I am reading manga, so atm it checks.
+This plugin is born because 
+- I enjoy seeing the weekly statistics on my kobo lockscreen when it is off.
+- I read manga using [rakuyomi](hanatsumi.github.io/rakuyomi/)
+- I wanted a way for mangas read through rakuyomi to contrbute to the statistics in an organized way (otherwise you get long unrelated names)
+
+There might be a better way to do this, but after a couple of days of learning lua and smashing my head against the keyboard, this correctly reports the manga being read with pages (somewhat accurate), so it checks.

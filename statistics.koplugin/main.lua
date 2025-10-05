@@ -7,6 +7,30 @@ function ReaderStatistics:initData()
     -- ...
 end
 
+function ReaderStatistics:insertDB(updated_pagecount)
+    -- ...
+    local conn = SQ3.open(db_location)
+    local page_offset = 0
+    if self.ui.rakuyomi_to_stats then
+        page_offset = self.ui.rakuyomi_to_stats:getPageOffset(self.ui.doc_settings.data.doc_path)
+    end
+    --...
+    if duration > 0 then
+        local adjusted_page = page + page_offset
+        local adjusted_total_pages = self.data.pages + page_offset
+        stmt:reset():bind(id_book, adjusted_page, ts, duration, adjusted_total_pages):step()
+    end
+    -- ...
+     local sql_stmt = [[
+        UPDATE book
+        SET    pages = ?
+        WHERE  id = ?;
+    ]]
+    stmt = conn:prepare(sql_stmt)
+    local adjusted_book_pages = (updated_pagecount or self.data.pages) + page_offset
+    stmt:reset():bind(adjusted_book_pages, id_book):step()
+    -- ...
+end
 
 -- Add the following function below the initData function
 function ReaderStatistics:overrideBookTitleAndMd5IfIsManga()

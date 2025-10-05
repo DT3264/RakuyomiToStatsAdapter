@@ -5,7 +5,7 @@ local logger = require("logger")
 local SQ3 = require("lua-ljsqlite3/init")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
 
-local db_location = DataStorage:getSettingsDir() .. "/mangaadapter.sqlite3"
+local db_location = DataStorage:getSettingsDir() .. "/rakuyomi_file_map.sqlite3"
 
 logger.info("Loading RakuyomiToStatsAdapter")
 
@@ -43,6 +43,15 @@ function RakuyomiToStatsAdapter:linkFileToManga(manga_path, manga_id, chapter_nu
     stmt:reset():bind(manga_path, manga_name, chapter_num, manga_pages):step()
     stmt:close()
     conn:close()
+end
+
+function RakuyomiToStatsAdapter:getPageOffset(file_path)
+    local conn = SQ3.open(db_location)
+    local manga_chapter_raw = conn:rowexec("SELECT chapter_num FROM file_to_manga_map WHERE file_path = '" .. file_path.. "'")
+    local manga_chapter = tonumber(manga_chapter_raw)
+    local page_offset = conn:rowexec("SELECT COALESCE(sum(chapter_pages), 0) FROM file_to_manga_map WHERE chapter_num < " .. tostring(manga_chapter) .. "")
+    conn:close()
+    return tonumber(page_offset)
 end
 
 function RakuyomiToStatsAdapter:getMangaForFilePathIfExists(file_path)

@@ -45,6 +45,10 @@ function RakuyomiToStatsAdapter:getPageOffset(file_path)
     local conn = SQ3.open(db_location)
     local stmt_get_info = conn:prepare("SELECT chapter_num, manga_name FROM file_to_manga_map WHERE file_path = ?")
     local manga_data = stmt_get_info:reset():bind(file_path):step()
+    if manga_data == nil then
+        conn:close()
+        return 0
+    end
     local manga_chapter_num = tonumber(manga_data[1])
     local manga_name = manga_data[2]
 
@@ -57,7 +61,11 @@ end
 function RakuyomiToStatsAdapter:getMangaForFilePathIfExists(file_path)
     local conn = SQ3.open(db_location)
     local stmt_manga_name = conn:prepare("SELECT manga_name FROM file_to_manga_map WHERE file_path = ?")
-    local manga_name = stmt_manga_name:reset():bind(file_path):step()[1]
+    local result_row = stmt_manga_name:reset():bind(file_path):step()
+    local manga_name = nil
+    if result_row then
+        manga_name = result_row[1]
+    end
     conn:close()
     return manga_name
 end

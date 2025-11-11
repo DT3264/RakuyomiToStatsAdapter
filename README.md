@@ -6,3 +6,12 @@ This plugin was born because
 - I wanted a way for mangas read through rakuyomi to contrbute to the statistics in an organized way (otherwise you get long unrelated names)
 
 There might be a better way to do this, but after a couple of days of learning lua and smashing my head against the keyboard, this correctly reports the manga being read with pages (somewhat accurate), so it checks.
+
+# Installation
+
+1) Copy the rakuyomitostatsadapter folder to the plugins folder
+2) For both the statistics and rakuyomi folders, open the files and follow the replace and add instructions
+
+## Note
+
+The 2nd step could have been patch files but I rarely used those hehe
